@@ -23,6 +23,7 @@ protected slots:
 protected:
     void keyPressEvent(QKeyEvent * event);
     void paintEvent(QPaintEvent * event);
+    void mouseEvent(QMouseEvent * event);
 
 private:
     void setupMenu(void);
