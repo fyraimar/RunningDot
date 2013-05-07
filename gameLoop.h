@@ -1,17 +1,18 @@
 #ifndef PAINTWIDGET_H
 #define PAINTWIDGET_H
 
+#define MENUHEIGHT 20
 #include <Walls.h>
 #include <Dot.h>
 #include <QtGui>
 
-class gameWindow : public QMainWindow
+class gameLoop : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    gameWindow(QWidget * parent = 0);
-    ~gameWindow(void);
+    gameLoop(QWidget * parent = 0);
+    ~gameLoop(void);
 
 protected slots:
     void refreshTimer(void);
@@ -23,17 +24,16 @@ protected slots:
 protected:
     void keyPressEvent(QKeyEvent * event);
     void paintEvent(QPaintEvent * event);
+    //void mouseEvent(QMouseEvent * event);
 
 private:
     void setupMenu(void);
 
 private:
-
-    bool IsDie;
-    bool bRun;
-    QTimer * timer;
-    int times;
-    int MenuBarSize;
+    Dot dot;
+    Walls wall;
+    bool ifRunning;
+    int direct;
 };
 
 #endif

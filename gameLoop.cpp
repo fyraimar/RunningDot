@@ -1,85 +1,126 @@
-#include "gameWindow.h"
+#include "gameLoop.h"
 #include <iostream>
 #include <vector>
 
 using namespace std;
 
-gameWindow::gameWindow(QWidget * parent)
+gameLoop::gameLoop(QWidget * parent)
 {
     QTextCodec::setCodecForTr(QTextCodec::codecForLocale());
     setWindowTitle(tr("Running Dot ~"));
-    MenuBarSize = 20;
-    setFixedSize(500,500+MenuBarSize);
+    setFixedSize(600,600+MENUHEIGHT);
     setupMenu();
-    IsDie = false;
-    bRun = false;
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(refreshTimer()));
-    times = 200;
-    timer->start(times);
+    ifRunning = 0;
 }
 
-gameWindow::~gameWindow()
+gameLoop::~gameLoop()
 {
 }
 
-void gameWindow::refreshTimer(void)
+void gameLoop::refreshTimer(void)
 {
-    if (bRun == false)
-    {
-        timer->stop();
-        return;
-    }
-    if (IsDie)
-    {
-        timer->stop();
-        bRun = false;
-        QMessageBox::information(this, tr("Game Over"),
-                tr("Over!"));
-        IsDie = false;
 
+    if (ifRunning == 0)
+    {
         return;
     }
+
+    Position toNext;
+    toNext.x = dot.pos.x;
+    toNext.y = dot.pos.y;
+
+    switch (direct)
+    {
+    case 1:
+        toNext.y -= 1;
+        break;
+    case 2:
+        toNext.x += 1;
+        break;
+    case 3:
+        toNext.y += 1;
+        break;
+    case 4:
+        toNext.x -= 1;
+        break;
+    }
+
+    int ifValid = 1;
+
+    for (int i=0; i<wall.rocks.size(); i++)
+    {\
+        if (wall.rocks[i].x==toNext.x && wall.rocks[i].y==toNext.y)
+        {
+            ifValid = 0;
+            break;
+        }
+    }
+    if (!ifValid) return;
+
+    dot.pos.x = toNext.x;
+    dot.pos.y = toNext.y;
+    update();
+    wall.addRocks(dot.pos);
     update();
 }
 
-void gameWindow::paintEvent(QPaintEvent * event)
+void gameLoop::paintEvent(QPaintEvent * event)
 {
+
     QPainter painter(this);
     painter.setBrush(Qt::black);
     painter.drawRect(0, 0, size().width(), size().height());
-    if (IsDie || !bRun)
-    {
-        return;
-    }
+
 
     painter.setBrush(Qt::white);
-    for (int x=0; x<500; x+=25) painter.drawLine(x, MenuBarSize, x, 500+MenuBarSize);
-    for (int y=MenuBarSize; y<500+MenuBarSize; y+=25) painter.drawLine(0, y, 500, y);
+    for (int x=0; x<600; x+=24) painter.drawLine(x, MENUHEIGHT, x, 600+MENUHEIGHT);
+    for (int y=MENUHEIGHT; y<600+MENUHEIGHT; y+=24) painter.drawLine(0, y, 600, y);
+
+    painter.setBrush(Qt::yellow);
+    for (int i=0; i<wall.rocks.size(); i++)
+    {\
+        painter.drawRect(24*wall.rocks[i].x, 24*wall.rocks[i].y+MENUHEIGHT, 25, 25);
+    }
+
+    painter.setBrush(Qt::red);
+    painter.drawEllipse(24*dot.pos.x, 24*dot.pos.y+MENUHEIGHT, 24, 24);
 
     QWidget::paintEvent(event);
 }
 
-void gameWindow::mouseEvent(QMouseEvent * event)
+/*
+void gameLoop::mouseEvent(QMouseEvent * event)
 {
-
+    QWidget::mouseEvent(event);
 }
+*/
 
-void gameWindow::keyPressEvent(QKeyEvent * event)
+void gameLoop::keyPressEvent(QKeyEvent * event)
 {
 
     switch (event->key())
     {
-
+    case Qt::Key_Up:
+        this->direct = 1;
+        break;
+    case Qt::Key_Right:
+        this->direct = 2;
+        break;
+    case Qt::Key_Down:
+        this->direct = 3;
+        break;
+    case Qt::Key_Left:
+        this->direct = 4;
+        break;
     default:
         break;
     }
-
     QWidget::keyPressEvent(event);
+    refreshTimer();
 }
 
 
-void gameWindow::setupMenu(void)
+void gameLoop::setupMenu(void)
 {
     QMenuBar * menuBar = new QMenuBar(this);
     QMenu * gameMenu = new QMenu(tr("Game"), menuBar);
@@ -122,27 +163,25 @@ void gameWindow::setupMenu(void)
 
 }
 
-void gameWindow::showAbout(void)
+void gameLoop::showAbout(void)
 {
     QMessageBox::information(this, tr("Written by Fyr"),
                    tr("Based on qt4.8."));
 }
 
-void gameWindow::showHelp(void)
+void gameLoop::showHelp(void)
 {
     QMessageBox::information(this, tr("Help"),
                    tr("To control the Dot or Wall."));
 }
 
-void gameWindow::startGame(void)
+void gameLoop::startGame(void)
 {
-    bRun = true;
-    timer->start(times);
+    ifRunning = 1;
 }
 
-void gameWindow::pauseGame(void)
+void gameLoop::pauseGame(void)
 {
-    bRun = false;
-    timer->stop();
+    ifRunning = 0;
 }
 

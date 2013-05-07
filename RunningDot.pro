@@ -10,10 +10,12 @@ INCLUDEPATH += .
 # Input
 SOURCES += main.cpp \
     Dot.cpp \
-    gameWindow.cpp \
-    Walls.cpp
+    Walls.cpp \
+    Position.cpp \
+    gameLoop.cpp
 
 HEADERS += \
     Dot.h \
-    gameWindow.h \
-    Walls.h
+    Walls.h \
+    Position.h \
+    gameLoop.h
