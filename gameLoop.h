@@ -15,11 +15,8 @@ public:
     ~gameLoop(void);
 
 protected slots:
-    void refreshTimer(void);
-    void showAbout(void);
-    void showHelp(void);
-    void startGame(void);
-    void pauseGame(void);
+    void refreshTimer();
+    void restartGame();
 
 protected:
     void keyPressEvent(QKeyEvent * event);
@@ -28,11 +25,14 @@ protected:
 
 private:
     void setupMenu(void);
+    bool checkWin();
+    bool checkLoose();
 
 private:
     Dot dot;
     Walls wall;
-    bool ifRunning;
+    void setInit();
+    int ifWin;
     int direct;
 };
 

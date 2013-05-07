@@ -10,7 +10,9 @@ gameLoop::gameLoop(QWidget * parent)
     setWindowTitle(tr("Running Dot ~"));
     setFixedSize(600,600+MENUHEIGHT);
     setupMenu();
-    ifRunning = 0;
+    ifWin = -1;
+    setInit();
+    //QMessageBox::information(this, tr("Ready?!"),tr("Run to the Edge of the square!!!"));
 }
 
 gameLoop::~gameLoop()
@@ -20,10 +22,22 @@ gameLoop::~gameLoop()
 void gameLoop::refreshTimer(void)
 {
 
-    if (ifRunning == 0)
+
+    if (this->ifWin==0)
     {
+        QMessageBox::information(this, tr("GameOver!!!"),tr("You DIE!!!"));
+        ifWin=-1;
+        setInit();
         return;
     }
+    if (this->ifWin==1)
+    {
+        QMessageBox::information(this, tr("Congratulation!!!"),tr("You ESCAPED!!!"));
+        ifWin=-1;
+        setInit();
+        return;
+    }
+
 
     Position toNext;
     toNext.x = dot.pos.x;
@@ -60,7 +74,9 @@ void gameLoop::refreshTimer(void)
     dot.pos.x = toNext.x;
     dot.pos.y = toNext.y;
     update();
-    wall.addRocks(dot.pos);
+    if ( checkWin() ) return;
+    wall.addRocks(dot.pos, direct);
+    checkLoose();
     update();
 }
 
@@ -88,12 +104,6 @@ void gameLoop::paintEvent(QPaintEvent * event)
     QWidget::paintEvent(event);
 }
 
-/*
-void gameLoop::mouseEvent(QMouseEvent * event)
-{
-    QWidget::mouseEvent(event);
-}
-*/
 
 void gameLoop::keyPressEvent(QKeyEvent * event)
 {
@@ -124,38 +134,14 @@ void gameLoop::setupMenu(void)
 {
     QMenuBar * menuBar = new QMenuBar(this);
     QMenu * gameMenu = new QMenu(tr("Game"), menuBar);
-    QMenu * modeMenu = new QMenu(tr("Mode"), menuBar);
-    QMenu * helpMenu = new QMenu(tr("Help"), menuBar);
 
-    QAction * startGame = new QAction(tr("Start"), gameMenu);
-    QAction * pauseGame = new QAction(tr("Pause"), gameMenu);
+    QAction * restartGame = new QAction(tr("Restart"), gameMenu);
     QAction * quitGame = new QAction(tr("Quit"), gameMenu);
-    gameMenu->addAction(startGame);
-    gameMenu->addAction(pauseGame);
+    gameMenu->addAction(restartGame);
     gameMenu->addAction(quitGame);
     menuBar->addMenu(gameMenu);
-    connect(startGame, SIGNAL(triggered()), this, SLOT(startGame()));
-    connect(pauseGame, SIGNAL(triggered()), this, SLOT(pauseGame()));
+    connect(restartGame, SIGNAL(triggered()), this, SLOT(restartGame()));
     connect(quitGame, SIGNAL(triggered()), this, SLOT(close()));
-
-    QAction * dotMode = new QAction(tr("I'm dot!"), gameMenu);
-    QAction * wallMode = new QAction(tr("T'm walls!"), gameMenu);
-    modeMenu->addAction(dotMode);
-    modeMenu->addAction(wallMode);
-    menuBar->addMenu(modeMenu);
-    //
-    //
-
-    QAction * helpGame = new QAction(tr("游戏帮助"), helpMenu);
-    QAction * aboutGame = new QAction(tr("关于"), helpMenu);
-    helpMenu->addAction(helpGame);
-    helpMenu->addAction(aboutGame);
-    menuBar->addMenu(helpMenu);
-    connect(helpGame, SIGNAL(triggered()), this, SLOT(showHelp()));
-    connect(aboutGame, SIGNAL(triggered()), this, SLOT(showAbout()));
-
-
-    menuBar->addMenu(helpMenu);
 
 
     setMenuBar(menuBar);
@@ -163,25 +149,72 @@ void gameLoop::setupMenu(void)
 
 }
 
-void gameLoop::showAbout(void)
+
+
+bool gameLoop::checkLoose()
 {
-    QMessageBox::information(this, tr("Written by Fyr"),
-                   tr("Based on qt4.8."));
+    Position up=dot.pos;
+    Position right=dot.pos;
+    Position down=dot.pos;
+    Position left=dot.pos;
+
+    up.y = dot.pos.y - 1;
+    right.x =dot.pos.x + 1;
+    down.y = dot.pos.y + 1;
+    left.x =dot.pos.x - 1;
+
+    int ifValid1 = 1;
+    int ifValid2 = 1;
+    int ifValid3 = 1;
+    int ifValid4 = 1;
+    for (int i=0; i<wall.rocks.size(); i++)
+    {\
+        if (wall.rocks[i].x==up.x && wall.rocks[i].y==up.y)
+        {
+            ifValid1=0;
+        }
+        if (wall.rocks[i].x==right.x && wall.rocks[i].y==right.y)
+        {
+            ifValid2=0;
+        }
+        if (wall.rocks[i].x==down.x && wall.rocks[i].y==down.y)
+        {
+            ifValid3=0;
+        }
+        if (wall.rocks[i].x==left.x && wall.rocks[i].y==left.y)
+        {
+            ifValid4=0;
+        }
+    }
+    if (ifValid1 + ifValid2 + ifValid3 + ifValid4 == 0)
+    {
+        ifWin = 0;
+        return true;
+    }
+    return false;
 }
 
-void gameLoop::showHelp(void)
+bool gameLoop::checkWin()
 {
-    QMessageBox::information(this, tr("Help"),
-                   tr("To control the Dot or Wall."));
+    if (dot.pos.x==0 || dot.pos.y==0 || dot.pos.x==24 || dot.pos.y==24)
+    {
+        ifWin = 1;
+        update();
+        return true;
+    }
+    return false;
 }
 
-void gameLoop::startGame(void)
+void gameLoop::setInit()
 {
-    ifRunning = 1;
+    wall.rocks.clear();
+    dot.pos.x = 12;
+    dot.pos.y = 12;
+    QMessageBox::information(this, tr("Ready?!"),tr("Run to the Edge of the square!!!"));
+    update();
 }
 
-void gameLoop::pauseGame(void)
+void gameLoop::restartGame(void)
 {
-    ifRunning = 0;
+    setInit();
 }
-
